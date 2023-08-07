@@ -1,0 +1,15 @@
+{
+    "type" : "record",
+    "name" : "Student",
+    "namespace" : "dev.phoenixtype.db2topostgres.model",
+    "fields" : [
+        {
+            "name" : "id",
+            "type" : "int"
+        },
+        {
+            "name" : "name",
+            "type" : "string"
+        }
+    ]
+}

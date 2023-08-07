@@ -1,0 +1,116 @@
+version: "3.7"
+services:
+  db2:
+#    image: ibmcase/db2orders
+    image: ibmcom/db2
+    environment:
+      LICENSE: accept
+      DB2INSTANCE: db2inst1
+      DB2INST1_PASSWORD: password
+      DBNAME: student
+      BLU: false
+      ENABLE_ORACLE_COMPATIBILITY: false
+      UPDATEAVAIL: NO
+      TO_CREATE_SAMPLEDB: false
+      REPODB: false
+      IS_OSXFS: false
+      PERSISTENT_HOME: false
+      HADR_ENABLED: false
+      ETCD_ENDPOINT:
+      ETCD_USERNAME:
+      ETCD_PASSWORD:
+    ports:
+      - "50001:50000"
+    volumes:
+      - /Users/Phoenixtype/Docker/debezium-db2:/database
+    privileged: true
+    restart: always
+
+
+  postgres:
+    image: debezium/postgres:13
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgresuser
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: student
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+
+
+  kafka:
+    image: confluentinc/cp-enterprise-kafka:latest
+    depends_on: [zookeeper]
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
+
+  debezium:
+    image: db2/debezium
+    environment:
+      BOOTSTRAP_SERVERS: kafka:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+    depends_on: [kafka]
+    ports:
+      - "8083:8083"
+
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:latest
+    environment:
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:29092
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_LISTENERS: http://schema-registry:8081,http://localhost:8081
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "8081:8081"
+    depends_on: [zookeeper, kafka]
+
+
+  kafkacat:
+    image: confluentinc/cp-kafkacat
+    command: sleep infinity
+
+
+#  springboot-app:
+#    image: postgres2db2:0.0.1
+#    ports:
+#      - "8099:8099"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:db2://db2:50000/student
+#      SPRING_DATASOURCE_USERNAME: db2inst1
+#      SPRING_DATASOURCE_PASSWORD: password
+#      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      SPRING_KAFKA_PROPERTIES_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+#      SPRING_KAFKA_CONSUMER_GROUP_ID: student-service-group
+#      SPRING_KAFKA_CONSUMER_BOOTSTRAP_SERVERS: kafka:9092
+#      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+#      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+#      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: io.confluent.kafka.serializers.KafkaAvroDeserializer
+#      SPRING_KAFKA_CONSUMER_PROPERTIES_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+#    depends_on:
+#      - db2
+#      - kafka
+#      - schema-registry
