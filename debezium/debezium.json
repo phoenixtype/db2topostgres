@@ -2,7 +2,7 @@
     "name": "db2-connector",
     "config": {
         "connector.class": "io.debezium.connector.db2.Db2Connector",
-        "tasks.max": "1",
+        "tasks.max" : "1",
         "database.server.name": "db2",
         "database.hostname": "db2",
         "database.port": "50000",
@@ -15,7 +15,11 @@
         "table.include.list": "DB2INST1.STUDENT",
         "schema.history.internal.kafka.bootstrap.servers": "kafka:29092",
         "schema.history.internal.kafka.topic": "schemahistory.student",
+        "topic.creation.default.replication.factor": 1,
+        "topic.creation.default.partitions": 1,
+        "topic.creation.default.cleanup.policy": "compact",
         "snapshot.mode": "initial",
-        "tombstones.on.delete": "false"
+        "tombstones.on.delete": "false",
+        "poll.interval.ms": "1000"
     }
 }

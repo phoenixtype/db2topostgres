@@ -1,6 +1,5 @@
 package dev.phoenixtype.db2topostgres.service;
 
-
 import dev.phoenixtype.db2topostgres.model.StudentRecord;
 import dev.phoenixtype.db2topostgres.repository.StudentsRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 public class KafkaConsumer {
-    private static final String KAFKA_TOPIC = "db2.db2inst1.student";
-
+    private static final String KAFKA_TOPIC = "db2.DB2INST1.STUDENT";
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
     private final StudentsRepository studentsRepository;
@@ -36,7 +34,7 @@ public class KafkaConsumer {
             if ("d".equals(op)) {
                 GenericRecord beforeNode = (GenericRecord) record.get("before");
                 if (beforeNode != null) {
-                    int id = Integer.parseInt(beforeNode.get("id").toString());
+                    int id = Integer.parseInt(beforeNode.get("ID").toString());
                     logger.info("id value: " + id);
                     studentsRepository.deleteById(id);
                     logger.info("Deleted record with id: " + id);
@@ -49,11 +47,13 @@ public class KafkaConsumer {
                 logger.info("After node payload " + afterNode);
 
                 if (beforeNode != null && afterNode != null) {
-                    int id = Integer.parseInt(beforeNode.get("id").toString());
-                    String newName = afterNode.get("name").toString();
+                    int id = Integer.parseInt(beforeNode.get("ID").toString());
+                    String newName = afterNode.get("NAME").toString();
+                    String newEmail = afterNode.get("EMAIL").toString();
 
                     logger.info("The update id value is "+ id);
                     logger.info("The update name value is " + newName);
+                    logger.info("The update email value is " + newEmail);
 
                     StudentRecord existingStudentRecord = studentsRepository.findById(id).orElse(null);
 
@@ -61,6 +61,7 @@ public class KafkaConsumer {
 
                     if (existingStudentRecord != null) {
                         existingStudentRecord.setName(newName);
+                        existingStudentRecord.setEmail(newEmail);
                         studentsRepository.save(existingStudentRecord);
                         logger.info("Updated record with id " + id + ": " + existingStudentRecord);
                     } else {
@@ -70,11 +71,13 @@ public class KafkaConsumer {
             } else if ("c".equals(op)) {
                 GenericRecord afterNode = (GenericRecord) record.get("after");
                 if (afterNode != null) {
-                    int id = Integer.parseInt(afterNode.get("id").toString());
-                    String name = afterNode.get("name").toString();
+                    int id = Integer.parseInt(afterNode.get("ID").toString());
+                    String name = afterNode.get("NAME").toString();
+                    String email = afterNode.get("EMAIL").toString();
                     StudentRecord newStudentRecord = new StudentRecord();
                     newStudentRecord.setId(id);
                     newStudentRecord.setName(name);
+                    newStudentRecord.setEmail(email);
                     studentsRepository.save(newStudentRecord);
                     logger.info("Inserted new record: " + newStudentRecord);
                 }

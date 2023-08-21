@@ -1,8 +1,8 @@
 version: "3.7"
 services:
   db2:
-#    image: ibmcase/db2orders
-    image: ibmcom/db2
+    image: ibmcase/db2orders
+#    image: ibmcom/db2
     environment:
       LICENSE: accept
       DB2INSTANCE: db2inst1
@@ -20,9 +20,9 @@ services:
       ETCD_USERNAME:
       ETCD_PASSWORD:
     ports:
-      - "50001:50000"
+      - "50000:50000"
     volumes:
-      - /Users/Phoenixtype/Docker/debezium-db2:/database
+      - /Users/Phoenixtype/Docker/debezium:/database
     privileged: true
     restart: always
 
