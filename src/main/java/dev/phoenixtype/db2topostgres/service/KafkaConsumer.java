@@ -13,7 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 public class KafkaConsumer {
-    private static final String KAFKA_TOPIC = "db2.DB2INST1.STUDENT";
+//    private static final String KAFKA_TOPIC = "db2.DB2INST1.STUDENT";
+    private static final String KAFKA_TOPIC = "db2.AKUMA.STUDENT";
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumer.class);
 
     private final StudentsRepository studentsRepository;
@@ -68,7 +69,7 @@ public class KafkaConsumer {
                         logger.info("Record with id " + id + " not found for update!");
                     }
                 }
-            } else if ("c".equals(op)) {
+            } else if ("c".equals(op) || "r".equals(op)) {
                 GenericRecord afterNode = (GenericRecord) record.get("after");
                 if (afterNode != null) {
                     int id = Integer.parseInt(afterNode.get("ID").toString());

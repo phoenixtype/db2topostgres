@@ -1,34 +1,41 @@
-# Fetch base image
-FROM openjdk:17-slim as builder
+# Use the official OpenJDK 17 base image
+FROM openjdk:17-jdk-slim
+LABEL authors="samuel.akuma"
 
-# Set working directory
-WORKDIR /workspace/app
+# Set the working directory in the container
+WORKDIR /app
 
-# Copy Maven configuration
-COPY mvnw .
-COPY .mvn .mvn
-COPY pom.xml .
+# Copy the Maven pom.xml and source code to the container
+COPY ./pom.xml ./pom.xml
+COPY ./src ./src
 
-# Fetch project dependencies
-RUN ./mvnw dependency:go-offline
+# Build the application without running tests
+#RUN mvn clean package -DskipTests
 
-# Copy project files
-COPY src src
+# Copy the application's JAR file inside the container
+COPY target/db2topostgres-0.0.1-SNAPSHOT.jar /app/db2topostgres.jar
 
-# Build the project
-RUN ./mvnw package -DskipTests
-RUN mkdir -p target/dependency && (cd target/dependency; jar -xf ../*.jar)
+# Command to run the Spring Boot application
+CMD ["java", "-jar", "/app/db2topostgres.jar"]
 
-# Fetch base image for the runtime
-FROM openjdk:17-slim
+# Expose the application's port (assuming the default port 8098, but you might need to adjust this)
+EXPOSE 8098
 
-# Set volume
-VOLUME /tmp
 
-# Copy over dependencies from the build image
-COPY --from=builder /workspace/app/target/dependency/BOOT-INF/lib /app/lib
-COPY --from=builder /workspace/app/target/dependency/META-INF /app/META-INF
-COPY --from=builder /workspace/app/target/dependency/BOOT-INF/classes /app
+# -- OLD DOCKERFILE --
 
-# Set entry point
-ENTRYPOINT ["java","-cp","app:app/lib/*","dev.phoenixtype.postgres2db2.Postgres2db2Application"]
+## Use the official OpenJDK 17 base image
+#FROM openjdk:17-jdk-slim
+#LABEL authors="samuel.akuma"
+#
+## Set the working directory in the container
+#WORKDIR /app
+#
+## Copy the application's JAR file inside the container
+#COPY target/db2topostgres-0.0.1-SNAPSHOT.jar /app/db2topostgres.jar
+#
+## Command to run the Spring Boot application
+#CMD ["java", "-jar", "/app/db2topostgres.jar"]
+#
+## Expose the application's port (assuming the default port 8098, but you might need to adjust this)
+#EXPOSE 8098
