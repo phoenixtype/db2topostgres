@@ -128,3 +128,4 @@ services:
       - schema-registry
     ports:
       - "8098:8098"
+
