@@ -20,6 +20,6 @@
         "topic.creation.default.cleanup.policy": "compact",
         "snapshot.mode": "initial",
         "tombstones.on.delete": "false",
-        "poll.interval.ms": "1000"
+        "poll.interval.ms": "500"
     }
 }
